@@ -8,8 +8,8 @@
     <style>
         :root {
             --bg-gradient: radial-gradient(circle at top, #14182e 0%, #080a12 100%);
-            --card-bg: rgba(22, 27, 46, 0.65);
-            --card-border: rgba(138, 147, 212, 0.18);
+            --card-bg: rgba(22, 27, 46, 0.7);
+            --card-border: rgba(138, 147, 212, 0.2);
             --text-primary: #f8fafc;
             --text-secondary: #94a3b8;
             --accent-start: #4f46e5;
@@ -172,14 +172,13 @@
 
         <h2>Для установки и настройки VPN<br>поэтапно нажмите кнопки ниже</h2>
 
-        <!-- Обе кнопки строго теги <a> для нативной поддержки схем на смартфонах -->
-        <a id="action-btn-1" href="#" class="btn">Скачать приложение</a>
+        <a id="btn-download" href="#" class="btn">Скачать приложение</a>
 
         <div class="arrow">↓</div>
 
-        <a id="action-btn-2" href="#" class="btn">Настроить</a>
+        <a id="btn-setup" href="#" class="btn">Настроить</a>
 
-        <a id="guide-btn" href="#" class="btn btn-outline" style="display: none;">📖 Инструкция по настройке</a>
+        <a id="btn-guide" href="#" class="btn btn-outline" style="display: none;">📖 Инструкция по настройке</a>
 
         <div class="hint-text">Для стабильной работы желательно иметь как минимум 2ГБ свободной памяти.</div>
 
@@ -189,6 +188,8 @@
     </div>
 
     <script>
+        // 1. Тестовый дефолтный ключ (из видео) — чтобы работало СРАЗУ, даже без ?sub=
+        const DEFAULT_SUB = "https://yamakasi.cloud/subscription/08595a0c-611d-4fc2-b5bc-21efdfe1f056";
         const WINDOWS_GUIDE_URL = "https://telegra.ph/VelunVPN-Windows-Setup-01-01";
 
         const tg = window.Telegram?.WebApp;
@@ -197,14 +198,11 @@
             tg.ready();
         }
 
-        // Извлекаем ключ подписки
-        const search = window.location.search;
-        let subLink = "";
-        if (search.includes("sub=")) {
-            subLink = search.substring(search.indexOf("sub=") + 4).split("&")[0];
-            try {
-                subLink = decodeURIComponent(subLink);
-            } catch (e) {}
+        // 2. Получаем sub из URL или берём тестовый
+        const urlParams = new URLSearchParams(window.location.search);
+        let subLink = urlParams.get('sub');
+        if (!subLink) {
+            subLink = DEFAULT_SUB;
         }
 
         const ua = navigator.userAgent || navigator.vendor || window.opera;
@@ -212,9 +210,9 @@
         const isAndroid = /android/i.test(ua);
         const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(ua);
 
-        const btn1 = document.getElementById('action-btn-1');
-        const btn2 = document.getElementById('action-btn-2');
-        const guideBtn = document.getElementById('guide-btn');
+        const btnDownload = document.getElementById('btn-download');
+        const btnSetup = document.getElementById('btn-setup');
+        const btnGuide = document.getElementById('btn-guide');
 
         function triggerHaptic() {
             if (tg && tg.HapticFeedback) {
@@ -222,59 +220,38 @@
             }
         }
 
-        if (isIOS || isAndroid) {
-            // 1. Ссылка на магазин (для https:// tg.openLink работает идеально)
-            const storeUrl = isIOS 
-                ? "https://apps.apple.com/us/app/incy/id6756943388?l=ru" 
-                : "https://play.google.com/store/apps/details?id=llc.itdev.incy";
+        if (isIOS) {
+            // iOS
+            const appStoreUrl = "https://apps.apple.com/us/app/incy/id6756943388?l=ru";
+            btnDownload.href = appStoreUrl;
+            btnDownload.target = "_blank";
+            btnDownload.onclick = () => { triggerHaptic(); };
 
-            btn1.href = storeUrl;
-            btn1.onclick = (e) => {
-                e.preventDefault();
-                triggerHaptic();
-                if (tg && tg.openLink) tg.openLink(storeUrl);
-                else window.location.href = storeUrl;
-            };
+            // Диплинк для Incy (именно так Telegram вызывает системное модальное окно)
+            btnSetup.href = `incy://${subLink}`;
+            btnSetup.onclick = () => { triggerHaptic(); };
 
-            // 2. Настройка: прописываем нативный href="incy://import/..."
-            if (subLink) {
-                btn2.href = `incy://import/${subLink}`;
-                btn2.onclick = () => {
-                    triggerHaptic();
-                    // Никаких preventDefault и никаких tg.openLink()!
-                    // Обычный переход по href вызывает системный диалог Telegram и iOS
-                };
-            } else {
-                btn2.href = "javascript:void(0)";
-                btn2.onclick = (e) => {
-                    e.preventDefault();
-                    triggerHaptic();
-                    const msg = "⚠️ Ключ подписки не найден в ссылке. Пожалуйста, откройте меню заново из бота.";
-                    if (tg && tg.showAlert) tg.showAlert(msg);
-                    else alert(msg);
-                };
-            }
+        } else if (isAndroid) {
+            // Android
+            const playStoreUrl = "https://play.google.com/store/apps/details?id=llc.itdev.incy";
+            btnDownload.href = playStoreUrl;
+            btnDownload.target = "_blank";
+            btnDownload.onclick = () => { triggerHaptic(); };
+
+            btnSetup.href = `incy://${subLink}`;
+            btnSetup.onclick = () => { triggerHaptic(); };
 
         } else if (isMac) {
-            // macOS
-            btn1.href = "https://apps.apple.com/app/foxray/id6448898396";
-            btn1.onclick = (e) => {
-                e.preventDefault();
-                triggerHaptic();
-                if (tg && tg.openLink) tg.openLink(btn1.href);
-                else window.location.href = btn1.href;
-            };
+            // Mac
+            btnDownload.href = "https://apps.apple.com/app/foxray/id6448898396";
+            btnDownload.target = "_blank";
+            btnDownload.onclick = () => { triggerHaptic(); };
 
-            btn2.innerText = "Скопировать ключ";
-            btn2.href = "javascript:void(0)";
-            btn2.onclick = (e) => {
+            btnSetup.innerText = "Скопировать ключ";
+            btnSetup.href = "javascript:void(0)";
+            btnSetup.onclick = (e) => {
                 e.preventDefault();
                 triggerHaptic();
-                if (!subLink) {
-                    if (tg && tg.showAlert) tg.showAlert("⚠️ Ключ подписки не найден в ссылке.");
-                    else alert("⚠️ Ключ подписки не найден в ссылке.");
-                    return;
-                }
                 navigator.clipboard.writeText(subLink).then(() => {
                     if (tg && tg.showAlert) tg.showAlert("Ключ скопирован! Добавьте его в FoXray 🍏");
                     else alert("Ключ скопирован! Добавьте его в FoXray 🍏");
@@ -283,35 +260,24 @@
 
         } else {
             // Windows
-            btn1.href = "https://github.com/sstarov171-ai/velunvpn/releases/download/1.0/v2rayN.zip";
-            btn1.onclick = () => {
-                triggerHaptic();
-            };
+            btnDownload.href = "https://github.com/sstarov171-ai/velunvpn/releases/download/1.0/v2rayN.zip";
+            btnDownload.onclick = () => { triggerHaptic(); };
 
-            btn2.innerText = "Скопировать ключ";
-            btn2.href = "javascript:void(0)";
-            btn2.onclick = (e) => {
+            btnSetup.innerText = "Скопировать ключ";
+            btnSetup.href = "javascript:void(0)";
+            btnSetup.onclick = (e) => {
                 e.preventDefault();
                 triggerHaptic();
-                if (!subLink) {
-                    if (tg && tg.showAlert) tg.showAlert("⚠️ Ключ подписки не найден в ссылке.");
-                    else alert("⚠️ Ключ подписки не найден в ссылке.");
-                    return;
-                }
                 navigator.clipboard.writeText(subLink).then(() => {
                     if (tg && tg.showAlert) tg.showAlert("Ключ скопирован! Вставьте его в v2rayN ✨");
                     else alert("Ключ скопирован! Вставьте его в v2rayN ✨");
                 });
             };
 
-            guideBtn.style.display = "flex";
-            guideBtn.href = WINDOWS_GUIDE_URL;
-            guideBtn.onclick = (e) => {
-                e.preventDefault();
-                triggerHaptic();
-                if (tg && tg.openLink) tg.openLink(WINDOWS_GUIDE_URL);
-                else window.open(WINDOWS_GUIDE_URL, "_blank");
-            };
+            btnGuide.style.display = "flex";
+            btnGuide.href = WINDOWS_GUIDE_URL;
+            btnGuide.target = "_blank";
+            btnGuide.onclick = () => { triggerHaptic(); };
         }
     </script>
 </body>
