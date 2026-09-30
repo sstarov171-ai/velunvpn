@@ -39,7 +39,6 @@
             overflow-x: hidden;
         }
 
-        /* Лунное свечение */
         .glow-effect {
             position: absolute;
             top: 15%;
@@ -177,10 +176,10 @@
 
         <div class="arrow">↓</div>
 
-        <button id="action-btn-2" class="btn">Настроить</button>
+        <a id="action-btn-2" href="#" class="btn">Настроить</a>
 
-        <!-- Дополнительная кнопка инструкции для ПК (скрыта по умолчанию) -->
-        <button id="guide-btn" class="btn btn-outline" style="display: none;">📖 Инструкция по настройке</button>
+        <!-- Дополнительная кнопка инструкции для ПК -->
+        <a id="guide-btn" href="#" class="btn btn-outline" style="display: none;">📖 Инструкция по настройке</a>
 
         <div class="hint-text">Для стабильной работы желательно иметь как минимум 2ГБ свободной памяти.</div>
 
@@ -190,10 +189,7 @@
     </div>
 
     <script>
-        // =========================================================================
-        // 📌 ВСТАВЬ СЮДА ССЫЛКУ НА СТАТЬЮ С ИНСТРУКЦИЕЙ ДЛЯ WINDOWS (Telegraph / Notion):
         const WINDOWS_GUIDE_URL = "https://telegra.ph/VelunVPN-Windows-Setup-01-01";
-        // =========================================================================
 
         const tg = window.Telegram?.WebApp;
         if (tg) {
@@ -219,91 +215,87 @@
             }
         }
 
-        if (isIOS) {
-            // iOS: App Store (Incy) + диплинк
-            btn1.onclick = () => {
+        function openExternal(url) {
+            if (tg && tg.openLink) {
+                tg.openLink(url);
+            } else {
+                window.location.href = url;
+            }
+        }
+
+        if (isIOS || isAndroid) {
+            // Ссылка на магазин
+            const storeUrl = isIOS 
+                ? "https://apps.apple.com/us/app/incy/id6756943388?l=ru" 
+                : "https://play.google.com/store/apps/details?id=llc.itdev.incy";
+
+            btn1.href = storeUrl;
+            btn1.onclick = (e) => {
+                e.preventDefault();
                 triggerHaptic();
-                if (tg && tg.openLink) {
-                    tg.openLink("https://apps.apple.com/us/app/incy/id6756943388?l=ru");
-                } else {
-                    window.location.href = "https://apps.apple.com/us/app/incy/id6756943388?l=ru";
+                openExternal(storeUrl);
+            };
+
+            // Диплинк импорта в Incy
+            const deepLink = `incy://import/${subLink}`;
+            btn2.href = deepLink;
+            btn2.onclick = (e) => {
+                triggerHaptic();
+                if (!subLink) {
+                    if (tg && tg.showAlert) {
+                        tg.showAlert("⚠️ Ключ подписки не передан в ссылку (?sub=...)");
+                    } else {
+                        alert("⚠️ Ключ подписки не передан в ссылку (?sub=...)");
+                    }
+                    return;
                 }
-            };
-
-            btn2.onclick = () => {
-                triggerHaptic();
-                window.location.href = `incy://import/${subLink}`;
-            };
-
-        } else if (isAndroid) {
-            // Android: Google Play (Incy) + диплинк
-            btn1.onclick = () => {
-                triggerHaptic();
-                if (tg && tg.openLink) {
-                    tg.openLink("https://play.google.com/store/apps/details?id=llc.itdev.incy");
-                } else {
-                    window.location.href = "https://play.google.com/store/apps/details?id=llc.itdev.incy";
-                }
-            };
-
-            btn2.onclick = () => {
-                triggerHaptic();
-                window.location.href = `incy://import/${subLink}`;
+                // На iOS нативная ссылка <a> с href сама вызовет всплывающее окно Telegram "Открыть ссылку"
             };
 
         } else if (isMac) {
-            // Mac: FoXray + копирование ключа
-            btn1.onclick = () => {
+            // macOS
+            btn1.href = "https://apps.apple.com/app/foxray/id6448898396";
+            btn1.onclick = (e) => {
+                e.preventDefault();
                 triggerHaptic();
-                if (tg && tg.openLink) {
-                    tg.openLink("https://apps.apple.com/app/foxray/id6448898396");
-                } else {
-                    window.location.href = "https://apps.apple.com/app/foxray/id6448898396";
-                }
+                openExternal(btn1.href);
             };
 
             btn2.innerText = "Скопировать ключ";
+            btn2.removeAttribute("href");
             btn2.onclick = () => {
                 triggerHaptic();
                 navigator.clipboard.writeText(subLink).then(() => {
-                    if (tg && tg.showAlert) {
-                        tg.showAlert("Ключ скопирован! Добавьте его в FoXray 🍏");
-                    } else {
-                        alert("Ключ скопирован! Добавьте его в FoXray 🍏");
-                    }
+                    const msg = subLink ? "Ключ скопирован! Добавьте его в FoXray 🍏" : "⚠️ Ключ подписки отсутствует в ссылке";
+                    if (tg && tg.showAlert) tg.showAlert(msg);
+                    else alert(msg);
                 });
             };
 
         } else {
-            // Windows / Desktop:
-            // 1. Кнопка скачивания архива с твоего репозитория GitHub
+            // Windows
             btn1.href = "https://github.com/sstarov171-ai/velunvpn/releases/download/1.0/v2rayN.zip";
             btn1.onclick = () => {
                 triggerHaptic();
             };
 
-            // 2. Кнопка копирования ключа
             btn2.innerText = "Скопировать ключ";
+            btn2.removeAttribute("href");
             btn2.onclick = () => {
                 triggerHaptic();
                 navigator.clipboard.writeText(subLink).then(() => {
-                    if (tg && tg.showAlert) {
-                        tg.showAlert("Ключ скопирован! Вставьте его в v2rayN ✨");
-                    } else {
-                        alert("Ключ скопирован! Вставьте его в v2rayN ✨");
-                    }
+                    const msg = subLink ? "Ключ скопирован! Вставьте его в v2rayN ✨" : "⚠️ Ключ подписки отсутствует в ссылке";
+                    if (tg && tg.showAlert) tg.showAlert(msg);
+                    else alert(msg);
                 });
             };
 
-            // 3. Отдельная кнопка с инструкцией
             guideBtn.style.display = "flex";
-            guideBtn.onclick = () => {
+            guideBtn.href = WINDOWS_GUIDE_URL;
+            guideBtn.onclick = (e) => {
+                e.preventDefault();
                 triggerHaptic();
-                if (tg && tg.openLink) {
-                    tg.openLink(WINDOWS_GUIDE_URL);
-                } else {
-                    window.open(WINDOWS_GUIDE_URL, "_blank");
-                }
+                openExternal(WINDOWS_GUIDE_URL);
             };
         }
     </script>
