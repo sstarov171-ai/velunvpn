@@ -39,6 +39,7 @@
             overflow-x: hidden;
         }
 
+        /* Лунное свечение вокруг плашки */
         .glow-effect {
             position: absolute;
             top: 15%;
@@ -176,10 +177,10 @@
 
         <div class="arrow">↓</div>
 
-        <a id="action-btn-2" href="#" class="btn">Настроить</a>
+        <button id="action-btn-2" class="btn">Настроить</button>
 
-        <!-- Дополнительная кнопка инструкции для ПК -->
-        <a id="guide-btn" href="#" class="btn btn-outline" style="display: none;">📖 Инструкция по настройке</a>
+        <!-- Кнопка инструкции для ПК (скрыта на смартфонах) -->
+        <button id="guide-btn" class="btn btn-outline" style="display: none;">📖 Инструкция по настройке</button>
 
         <div class="hint-text">Для стабильной работы желательно иметь как минимум 2ГБ свободной памяти.</div>
 
@@ -189,7 +190,10 @@
     </div>
 
     <script>
+        // =========================================================================
+        // 📌 Ссылка на статью с инструкцией для Windows:
         const WINDOWS_GUIDE_URL = "https://telegra.ph/VelunVPN-Windows-Setup-01-01";
+        // =========================================================================
 
         const tg = window.Telegram?.WebApp;
         if (tg) {
@@ -197,8 +201,15 @@
             tg.ready();
         }
 
-        const urlParams = new URLSearchParams(window.location.search);
-        let subLink = urlParams.get('sub') || "";
+        // Извлекаем ключ подписки из URL (?sub=...)
+        const rawSearch = window.location.search;
+        let subLink = "";
+        if (rawSearch.includes("sub=")) {
+            subLink = rawSearch.split("sub=")[1].split("&")[0];
+            try {
+                subLink = decodeURIComponent(subLink);
+            } catch (e) {}
+        }
 
         const ua = navigator.userAgent || navigator.vendor || window.opera;
         const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
@@ -215,60 +226,77 @@
             }
         }
 
-        function openExternal(url) {
-            if (tg && tg.openLink) {
-                tg.openLink(url);
+        function openUrl(targetUrl) {
+            if (tg && typeof tg.openLink === 'function') {
+                try {
+                    tg.openLink(targetUrl);
+                    return;
+                } catch (err) {
+                    console.error("openLink error:", err);
+                }
+            }
+            window.location.assign(targetUrl);
+        }
+
+        function showMissingKeyAlert() {
+            const msg = "⚠️ Ключ подписки не найден в ссылке. Пожалуйста, откройте меню заново из бота.";
+            if (tg && tg.showAlert) {
+                tg.showAlert(msg);
             } else {
-                window.location.href = url;
+                alert(msg);
             }
         }
 
         if (isIOS || isAndroid) {
-            // Ссылка на магазин
             const storeUrl = isIOS 
                 ? "https://apps.apple.com/us/app/incy/id6756943388?l=ru" 
                 : "https://play.google.com/store/apps/details?id=llc.itdev.incy";
 
-            btn1.href = storeUrl;
+            // 1. Скачать Incy
             btn1.onclick = (e) => {
                 e.preventDefault();
                 triggerHaptic();
-                openExternal(storeUrl);
+                openUrl(storeUrl);
             };
 
-            // Диплинк импорта в Incy
-            const deepLink = `incy://import/${subLink}`;
-            btn2.href = deepLink;
+            // 2. Настроить подписку
             btn2.onclick = (e) => {
+                e.preventDefault();
                 triggerHaptic();
+
                 if (!subLink) {
-                    if (tg && tg.showAlert) {
-                        tg.showAlert("⚠️ Ключ подписки не передан в ссылку (?sub=...)");
-                    } else {
-                        alert("⚠️ Ключ подписки не передан в ссылку (?sub=...)");
-                    }
+                    showMissingKeyAlert();
                     return;
                 }
-                // На iOS нативная ссылка <a> с href сама вызовет всплывающее окно Telegram "Открыть ссылку"
+
+                const deepLink = `incy://import/${subLink}`;
+                openUrl(deepLink);
             };
 
         } else if (isMac) {
             // macOS
-            btn1.href = "https://apps.apple.com/app/foxray/id6448898396";
             btn1.onclick = (e) => {
                 e.preventDefault();
                 triggerHaptic();
-                openExternal(btn1.href);
+                openUrl("https://apps.apple.com/app/foxray/id6448898396");
             };
 
             btn2.innerText = "Скопировать ключ";
-            btn2.removeAttribute("href");
-            btn2.onclick = () => {
+            btn2.onclick = (e) => {
+                e.preventDefault();
                 triggerHaptic();
+
+                if (!subLink) {
+                    showMissingKeyAlert();
+                    return;
+                }
+
                 navigator.clipboard.writeText(subLink).then(() => {
-                    const msg = subLink ? "Ключ скопирован! Добавьте его в FoXray 🍏" : "⚠️ Ключ подписки отсутствует в ссылке";
-                    if (tg && tg.showAlert) tg.showAlert(msg);
-                    else alert(msg);
+                    if (tg && tg.showAlert) {
+                        tg.showAlert("Ключ скопирован! Добавьте его в FoXray 🍏");
+                    } else {
+                        alert("Ключ скопирован! Добавьте его в FoXray 🍏");
+                    }
                 });
             };
 
@@ -280,22 +308,29 @@
             };
 
             btn2.innerText = "Скопировать ключ";
-            btn2.removeAttribute("href");
-            btn2.onclick = () => {
+            btn2.onclick = (e) => {
+                e.preventDefault();
                 triggerHaptic();
+
+                if (!subLink) {
+                    showMissingKeyAlert();
+                    return;
+                }
+
                 navigator.clipboard.writeText(subLink).then(() => {
-                    const msg = subLink ? "Ключ скопирован! Вставьте его в v2rayN ✨" : "⚠️ Ключ подписки отсутствует в ссылке";
-                    if (tg && tg.showAlert) tg.showAlert(msg);
-                    else alert(msg);
+                    if (tg && tg.showAlert) {
+                        tg.showAlert("Ключ скопирован! Вставьте его в v2rayN ✨");
+                    } else {
+                        alert("Ключ скопирован! Вставьте его в v2rayN ✨");
+                    }
                 });
             };
 
             guideBtn.style.display = "flex";
-            guideBtn.href = WINDOWS_GUIDE_URL;
             guideBtn.onclick = (e) => {
                 e.preventDefault();
                 triggerHaptic();
-                openExternal(WINDOWS_GUIDE_URL);
+                openUrl(WINDOWS_GUIDE_URL);
             };
         }
     </script>
