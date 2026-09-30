@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VelunVPN 🌙</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at top, #14182e 0%, #080a12 100%);
+            --card-bg: rgba(22, 27, 46, 0.65);
+            --card-border: rgba(138, 147, 212, 0.18);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --accent-start: #4f46e5;
+            --accent-end: #7c3aed;
+            --accent-glow: rgba(99, 102, 241, 0.35);
+            --btn-text: #ffffff;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 24px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            overflow-x: hidden;
+        }
+
+        /* Фоновое лунное свечение */
+        .glow-effect {
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 280px;
+            height: 280px;
+            background: radial-gradient(circle, rgba(124, 58, 237, 0.22) 0%, rgba(79, 70, 229, 0.08) 50%, transparent 70%);
+            z-index: 0;
+            pointer-events: none;
+            filter: blur(30px);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 380px;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            padding: 32px 24px 26px 24px;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 24px rgba(99, 102, 241, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .brand-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(99, 102, 241, 0.12);
+            border: 1px solid rgba(138, 147, 212, 0.25);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            color: #cbd5e1;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 18px;
+            font-weight: 600;
+            line-height: 1.45;
+            margin: 0 0 28px 0;
+            color: var(--text-primary);
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            background: linear-gradient(135deg, var(--accent-start) 0%, var(--accent-end) 100%);
+            color: var(--btn-text);
+            border: none;
+            border-radius: 18px;
+            padding: 17px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            box-shadow: 0 8px 24px var(--accent-glow);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn:active {
+            transform: scale(0.975);
+            box-shadow: 0 4px 12px var(--accent-glow);
+        }
+
+        .arrow {
+            margin: 10px 0;
+            font-size: 18px;
+            color: var(--text-secondary);
+            opacity: 0.5;
+            animation: bounce 2s infinite ease-in-out;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(4px); }
+        }
+
+        .hint-text {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            margin: 22px 0 10px 0;
+            line-height: 1.4;
+            opacity: 0.8;
+        }
+
+        .support-btn {
+            background: transparent;
+            color: #a5b4fc;
+            border: none;
+            font-size: 14px;
+            font-weight: 500;
+            margin-top: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+
+        .support-btn:active {
+            color: #ffffff;
+        }
+    </style>
+</head>
+<body>
+    <div class="glow-effect"></div>
+
+    <div class="container">
+        <div class="brand-badge">
+            <span>🌙</span> VelunVPN
+        </div>
+
+        <h2>Для установки и настройки VPN<br>поэтапно нажмите кнопки ниже</h2>
+
+        <a id="action-btn-1" href="#" class="btn">Скачать приложение</a>
+
+        <div class="arrow">↓</div>
+
+        <button id="action-btn-2" class="btn">Настроить</button>
+
+        <div class="hint-text">Для стабильной работы желательно иметь как минимум 2ГБ свободной памяти.</div>
+
+        <a href="https://t.me/VelunVPN_SUPPORT" class="support-btn" target="_blank">
+            <span>🛠️</span> Решение проблем
+        </a>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            tg.ready();
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        let subLink = urlParams.get('sub') || "";
+
+        // Определение платформы
+        const ua = navigator.userAgent || navigator.vendor || window.opera;
+        const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
+        const isAndroid = /android/i.test(ua);
+        const isMac = /Macintosh|MacIntel|MacPPC|Mac68K/.test(ua);
+
+        const btn1 = document.getElementById('action-btn-1');
+        const btn2 = document.getElementById('action-btn-2');
+
+        function triggerHaptic() {
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+
+        if (isIOS) {
+            // iOS: App Store (Incy) + диплинк импорта
+            btn1.onclick = () => {
+                triggerHaptic();
+                if (tg && tg.openLink) {
+                    tg.openLink("https://apps.apple.com/us/app/incy/id6756943388?l=ru");
+                } else {
+                    window.location.href = "https://apps.apple.com/us/app/incy/id6756943388?l=ru";
+                }
+            };
+
+            btn2.onclick = () => {
+                triggerHaptic();
+                window.location.href = `incy://import/${subLink}`;
+            };
+
+        } else if (isAndroid) {
+            // Android: Google Play (Incy) + диплинк импорта
+            btn1.onclick = () => {
+                triggerHaptic();
+                if (tg && tg.openLink) {
+                    tg.openLink("https://play.google.com/store/apps/details?id=llc.itdev.incy");
+                } else {
+                    window.location.href = "https://play.google.com/store/apps/details?id=llc.itdev.incy";
+                }
+            };
+
+            btn2.onclick = () => {
+                triggerHaptic();
+                window.location.href = `incy://import/${subLink}`;
+            };
+
+        } else if (isMac) {
+            // macOS: FoXray + копирование ключа
+            btn1.onclick = () => {
+                triggerHaptic();
+                if (tg && tg.openLink) {
+                    tg.openLink("https://apps.apple.com/app/foxray/id6448898396");
+                } else {
+                    window.location.href = "https://apps.apple.com/app/foxray/id6448898396";
+                }
+            };
+
+            btn2.innerText = "Скопировать ключ";
+            btn2.onclick = () => {
+                triggerHaptic();
+                navigator.clipboard.writeText(subLink).then(() => {
+                    if (tg && tg.showAlert) {
+                        tg.showAlert("Ключ скопирован! Добавьте его в FoXray 🍏");
+                    } else {
+                        alert("Ключ скопирован! Добавьте его в FoXray 🍏");
+                    }
+                });
+            };
+
+        } else {
+            // Windows / Desktop:
+            // 1 кнопка: Скачивание локального архива (вызывает системное окно TG "offers you download")
+            btn1.href = "./v2rayN.zip";
+            btn1.setAttribute("download", "v2rayN.zip");
+            btn1.onclick = () => {
+                triggerHaptic();
+            };
+
+            // 2 кнопка: Инструкция по настройке
+            btn2.innerText = "Инструкция";
+            btn2.onclick = () => {
+                triggerHaptic();
+                const guideUrl = "https://telegra.ph/VelunVPN-Windows-Setup-01-01"; // Замени на свою ссылку
+                if (tg && tg.openLink) {
+                    tg.openLink(guideUrl);
+                } else {
+                    window.open(guideUrl, "_blank");
+                }
+            };
+        }
+    </script>
+</body>
+</html>
