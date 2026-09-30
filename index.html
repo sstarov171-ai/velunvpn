@@ -39,7 +39,7 @@
             overflow-x: hidden;
         }
 
-        /* Фоновое лунное свечение */
+        /* Лунное свечение */
         .glow-effect {
             position: absolute;
             top: 15%;
@@ -89,7 +89,7 @@
             font-size: 18px;
             font-weight: 600;
             line-height: 1.45;
-            margin: 0 0 28px 0;
+            margin: 0 0 24px 0;
             color: var(--text-primary);
         }
 
@@ -102,7 +102,7 @@
             color: var(--btn-text);
             border: none;
             border-radius: 18px;
-            padding: 17px;
+            padding: 16px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
@@ -116,8 +116,19 @@
             box-shadow: 0 4px 12px var(--accent-glow);
         }
 
+        .btn-outline {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(138, 147, 212, 0.3);
+            box-shadow: none;
+            margin-top: 10px;
+        }
+
+        .btn-outline:active {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
         .arrow {
-            margin: 10px 0;
+            margin: 8px 0;
             font-size: 18px;
             color: var(--text-secondary);
             opacity: 0.5;
@@ -126,13 +137,13 @@
 
         @keyframes bounce {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(4px); }
+            50% { transform: translateY(3px); }
         }
 
         .hint-text {
             font-size: 12.5px;
             color: var(--text-secondary);
-            margin: 22px 0 10px 0;
+            margin: 20px 0 10px 0;
             line-height: 1.4;
             opacity: 0.8;
         }
@@ -149,11 +160,6 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            transition: color 0.2s;
-        }
-
-        .support-btn:active {
-            color: #ffffff;
         }
     </style>
 </head>
@@ -173,6 +179,9 @@
 
         <button id="action-btn-2" class="btn">Настроить</button>
 
+        <!-- Дополнительная кнопка инструкции для ПК (скрыта по умолчанию) -->
+        <button id="guide-btn" class="btn btn-outline" style="display: none;">📖 Инструкция по настройке</button>
+
         <div class="hint-text">Для стабильной работы желательно иметь как минимум 2ГБ свободной памяти.</div>
 
         <a href="https://t.me/VelunVPN_SUPPORT" class="support-btn" target="_blank">
@@ -181,6 +190,11 @@
     </div>
 
     <script>
+        // =========================================================================
+        // 📌 ВСТАВЬ СЮДА ССЫЛКУ НА СТАТЬЮ С ИНСТРУКЦИЕЙ ДЛЯ WINDOWS (Telegraph / Notion):
+        const WINDOWS_GUIDE_URL = "https://telegra.ph/VelunVPN-Windows-Setup-01-01";
+        // =========================================================================
+
         const tg = window.Telegram?.WebApp;
         if (tg) {
             tg.expand();
@@ -190,7 +204,6 @@
         const urlParams = new URLSearchParams(window.location.search);
         let subLink = urlParams.get('sub') || "";
 
-        // Определение платформы
         const ua = navigator.userAgent || navigator.vendor || window.opera;
         const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
         const isAndroid = /android/i.test(ua);
@@ -198,6 +211,7 @@
 
         const btn1 = document.getElementById('action-btn-1');
         const btn2 = document.getElementById('action-btn-2');
+        const guideBtn = document.getElementById('guide-btn');
 
         function triggerHaptic() {
             if (tg && tg.HapticFeedback) {
@@ -206,7 +220,7 @@
         }
 
         if (isIOS) {
-            // iOS: App Store (Incy) + диплинк импорта
+            // iOS: App Store (Incy) + диплинк
             btn1.onclick = () => {
                 triggerHaptic();
                 if (tg && tg.openLink) {
@@ -222,7 +236,7 @@
             };
 
         } else if (isAndroid) {
-            // Android: Google Play (Incy) + диплинк импорта
+            // Android: Google Play (Incy) + диплинк
             btn1.onclick = () => {
                 triggerHaptic();
                 if (tg && tg.openLink) {
@@ -238,7 +252,7 @@
             };
 
         } else if (isMac) {
-            // macOS: FoXray + копирование ключа
+            // Mac: FoXray + копирование ключа
             btn1.onclick = () => {
                 triggerHaptic();
                 if (tg && tg.openLink) {
@@ -262,22 +276,33 @@
 
         } else {
             // Windows / Desktop:
-            // 1 кнопка: Скачивание локального архива (вызывает системное окно TG "offers you download")
-            btn1.href = "./v2rayN.zip";
-            btn1.setAttribute("download", "v2rayN.zip");
+            // 1. Кнопка скачивания архива с твоего репозитория GitHub
+            btn1.href = "https://github.com/sstarov171-ai/velunvpn/releases/download/1.0/v2rayN.zip";
             btn1.onclick = () => {
                 triggerHaptic();
             };
 
-            // 2 кнопка: Инструкция по настройке
-            btn2.innerText = "Инструкция";
+            // 2. Кнопка копирования ключа
+            btn2.innerText = "Скопировать ключ";
             btn2.onclick = () => {
                 triggerHaptic();
-                const guideUrl = "https://telegra.ph/VelunVPN-Windows-Setup-01-01"; // Замени на свою ссылку
+                navigator.clipboard.writeText(subLink).then(() => {
+                    if (tg && tg.showAlert) {
+                        tg.showAlert("Ключ скопирован! Вставьте его в v2rayN ✨");
+                    } else {
+                        alert("Ключ скопирован! Вставьте его в v2rayN ✨");
+                    }
+                });
+            };
+
+            // 3. Отдельная кнопка с инструкцией
+            guideBtn.style.display = "flex";
+            guideBtn.onclick = () => {
+                triggerHaptic();
                 if (tg && tg.openLink) {
-                    tg.openLink(guideUrl);
+                    tg.openLink(WINDOWS_GUIDE_URL);
                 } else {
-                    window.open(guideUrl, "_blank");
+                    window.open(WINDOWS_GUIDE_URL, "_blank");
                 }
             };
         }
